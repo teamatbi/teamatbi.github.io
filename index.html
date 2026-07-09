@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android Technology for Blind International</title>
+    <style>
+        /* Basic accessible styling with high contrast */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #ffffff;
+            color: #111111;
+            margin: 0;
+            padding: 20px;
+        }
+        header, nav, main, footer {
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        nav a {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-right: 10px;
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        nav a:focus, nav a:hover {
+            background-color: #003d7a;
+            outline: 3px solid #ffcc00;
+        }
+        .time-display {
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 5px;
+            background-color: #f0f0f0;
+            display: inline-block;
+        }
+        footer {
+            border-top: 2px solid #333;
+            margin-top: 40px;
+            padding-top: 20px;
+        }
+        footer a {
+            display: inline-block;
+            margin-right: 15px;
+            color: #0056b3;
+            font-weight: bold;
+        }
+        footer a:focus {
+            outline: 3px solid #ffcc00;
+        }
+    </style>
+</head>
+<body>
+
+    <header role="banner">
+        <h1>Android Technology for Blind International</h1>
+        <p>Welcome to the official website of ATBI.</p>
+        
+        <div class="time-display" aria-live="polite" id="device-time">
+            Loading device time...
+        </div>
+
+        <nav role="navigation" aria-label="Main Navigation">
+            <a href="index.html" aria-current="page">Home</a>
+            <a href="tools.html">Tools</a>
+            <a href="posts.html">Posts</a>
+        </nav>
+    </header>
+
+    <hr aria-hidden="true">
+
+    <main role="main">
+        <h2>Welcome to ATBI (Assistive Technology for the Blind International)</h2>
+        <p><strong>Empowering Sight, Enhancing Lives through Technology</strong></p>
+        
+        <p>Welcome to ATBI, a global charitable community dedicated to creating a brighter, more accessible world for visually impaired individuals worldwide. We believe that blindness should never be a barrier to knowledge, independence, and happiness. Through the power of technology and strong teamwork, we stand together as one big family to support each other.</p>
+
+        <h3>Our Mission</h3>
+        <p>Our mission is entirely charitable. We focus on providing free, digital, and practical assistive tools that help blind individuals navigate daily tasks, education, and technology with ease. We aim to bring useful resources directly to our members' fingertips without any financial burden.</p>
+
+        <h3>Our Vision</h3>
+        <p>To build a global supportive community where every visually impaired person, regardless of their location, has equal access to technology, opportunities, and a caring support system that understands their needs.</p>
+
+        <h3>Why Choose Our Community?</h3>
+        <ul>
+            <li><strong>True Family & Support:</strong> A safe, welcoming space with zero pressure, where members understand and care for each other.</li>
+            <li><strong>Accessible Tools:</strong> Simple, functional, and offline-friendly HTML tools created to enhance daily independence.</li>
+            <li><strong>Global Network:</strong> Connecting visually impaired individuals and passionate tech developers across different countries and time zones.</li>
+        </ul>
+
+        <p><em>Together, we are not just building a platform; we are building a family. Let's move forward together!</em></p>
+    </main>
+
+    <hr aria-hidden="true">
+
+    <footer role="contentinfo">
+        <a href="https://t.me/TeamATBI_Channel" target="_blank" rel="noopener">Join our Telegram Channel</a>
+        <a href="https://t.me/ATBI_TeamAdmin_Support_bot" target="_blank" rel="noopener">Contact and Support</a>
+        <a href="https://telegra.ph/Official-Group-Regulations-by-ATBI-Admin-07-05" target="_blank" rel="noopener" aria-label="Read our group rules (opens in a new tab)">Read our group rules</a>
+    </footer>
+
+    <script>
+        function updateTime() {
+            const timeElement = document.getElementById('device-time');
+            const now = new Date();
+            // Formats time clearly for speech synthesis (e.g., "12:30:15 PM")
+            timeElement.textContent = "Your device time: " + now.toLocaleTimeString();
+        }
+        // Run immediately on load
+        updateTime();
+        // Update every second
+        setInterval(updateTime, 1000);
+    </script>
+
+</body>
+</html>
