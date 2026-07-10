@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Android Technology for Blind International</title>
     <style>
-        /* Accessible styling with strong color contrast */
+        /* Accessible core styles with high color contrast (Dark text on light background) */
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -18,6 +18,7 @@
             margin-bottom: 20px;
             padding: 10px;
         }
+        /* Clearly defined, high-contrast block navigation links */
         nav a {
             display: inline-block;
             padding: 10px 15px;
@@ -28,9 +29,16 @@
             border-radius: 4px;
             font-weight: bold;
         }
-        nav a:focus, nav a:hover {
+        /* Styling active tab visually */
+        nav a.active {
+            background-color: #111111;
+            outline: 2px solid #0056b3;
+        }
+        /* Highly visible keyboard focus indicator for keyboard/switch navigation */
+        nav a:focus, nav a:hover, footer a:focus {
             background-color: #003d7a;
             outline: 3px solid #ffcc00;
+            outline-offset: 2px;
         }
         .time-display {
             font-weight: bold;
@@ -39,7 +47,7 @@
             background-color: #f0f0f0;
             display: inline-block;
         }
-        /* Utility class to make text readable ONLY by screen readers */
+        /* Utility class to cleanly mask elements from sighted users while remaining readable by TalkBack */
         .sr-only {
             position: absolute;
             width: 1px;
@@ -68,30 +76,27 @@
             color: #0056b3;
             font-weight: bold;
         }
-        footer a:focus {
-            outline: 3px solid #ffcc00;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Header Section (Consistent layout across pages) -->
+    <!-- Header Section (Identical structural layout across all site paths) -->
     <header role="banner">
         <h1>Android Technology for Blind International</h1>
         <p>Welcome to the official website of ATBI.</p>
         
-        <!-- Time Section structured for Accessibility -->
+        <!-- Dual-Layer Time Track Engine Container -->
         <div class="time-display">
-            <!-- 1. Screen readers only see this static text snapshot taken at page load -->
+            <!-- Read by Screen Readers natively without continuous loop interruptions -->
             <span id="accessible-time">Loading device time...</span>
             
-            <!-- 2. Visual users see this dynamic clock updating every minute, hidden from TalkBack -->
+            <!-- Hidden from screen readers to prevent constant audio announcements on minute updates -->
             <span id="visual-time" aria-hidden="true" style="display: none;"></span>
         </div>
 
-        <!-- Navigation Buttons -->
+        <!-- Main Site Navigation Section -->
         <nav role="navigation" aria-label="Main Navigation">
-            <a href="index.html" aria-current="page">Home</a>
+            <a href="index.html" class="active" aria-current="page">Home</a>
             <a href="tools.html">Tools</a>
             <a href="posts.html">Posts</a>
         </nav>
@@ -124,20 +129,17 @@
 
     <hr aria-hidden="true">
 
-    <!-- Footer Section -->
+    <!-- Footer Section with Structural Accessible Landmark Heading -->
     <footer role="contentinfo">
-        <!-- New Visual and Screen Reader Structural Heading -->
         <h2 class="footer-heading">Community Links & Support</h2>
         
         <a href="https://t.me/TeamATBI_Channel" target="_blank" rel="noopener">Join our Telegram Channel</a>
         <a href="https://t.me/ATBI_TeamAdmin_Support_bot" target="_blank" rel="noopener">Contact and Support</a>
         <a href="https://telegra.ph/Official-Group-Regulations-by-ATBI-Admin-07-05" target="_blank" rel="noopener" aria-label="Read our group rules (opens in a new tab)">Read our group rules</a>
-        
-        <!-- New Form Link -->
         <a href="https://surveyheart.com/form/6a4e244f670f7d5be2c5ab81" target="_blank" rel="noopener" aria-label="Join our team (opens in a new tab)">Join our team</a>
     </footer>
 
-    <!-- JavaScript Handling Dual Time Logic -->
+    <!-- JavaScript Clock Logic without Seconds (TalkBack Friendly) -->
     <script>
         const formatOptions = { hour: '2-digit', minute: '2-digit' };
 
@@ -148,11 +150,14 @@
             const accessibleElement = document.getElementById('accessible-time');
             const visualElement = document.getElementById('visual-time');
 
+            // Save standard snapshot text for screen readers immediately on page open
             accessibleElement.textContent = "Page loaded at device time: " + timeString;
 
+            // Display time to visual layout
             visualElement.textContent = "Device time: " + timeString;
             visualElement.style.display = "inline";
 
+            // Run visual updates quietly every minute (60000 milliseconds)
             setInterval(updateVisualTime, 60000);
         }
 
@@ -163,8 +168,10 @@
             const visualElement = document.getElementById('visual-time');
             const accessibleElement = document.getElementById('accessible-time');
             
+            // Update visual time interface text string
             visualElement.textContent = "Device time: " + timeString;
 
+            // Push the accessible container into background hiding after initial print
             if (!accessibleElement.classList.contains('sr-only')) {
                 accessibleElement.classList.add('sr-only');
                 accessibleElement.textContent = "Device time when page loaded: " + timeString;
