@@ -56,9 +56,15 @@
             margin-top: 40px;
             padding-top: 20px;
         }
+        .footer-heading {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #333333;
+        }
         footer a {
             display: inline-block;
             margin-right: 15px;
+            margin-bottom: 10px;
             color: #0056b3;
             font-weight: bold;
         }
@@ -120,9 +126,15 @@
 
     <!-- Footer Section -->
     <footer role="contentinfo">
+        <!-- New Visual and Screen Reader Structural Heading -->
+        <h2 class="footer-heading">Community Links & Support</h2>
+        
         <a href="https://t.me/TeamATBI_Channel" target="_blank" rel="noopener">Join our Telegram Channel</a>
         <a href="https://t.me/ATBI_TeamAdmin_Support_bot" target="_blank" rel="noopener">Contact and Support</a>
         <a href="https://telegra.ph/Official-Group-Regulations-by-ATBI-Admin-07-05" target="_blank" rel="noopener" aria-label="Read our group rules (opens in a new tab)">Read our group rules</a>
+        
+        <!-- New Form Link -->
+        <a href="https://surveyheart.com/form/6a4e244f670f7d5be2c5ab81" target="_blank" rel="noopener" aria-label="Join our team (opens in a new tab)">Join our team</a>
     </footer>
 
     <!-- JavaScript Handling Dual Time Logic -->
@@ -136,14 +148,11 @@
             const accessibleElement = document.getElementById('accessible-time');
             const visualElement = document.getElementById('visual-time');
 
-            // Set the static text for TalkBack users immediately
             accessibleElement.textContent = "Page loaded at device time: " + timeString;
 
-            // Set the visual text and display it
             visualElement.textContent = "Device time: " + timeString;
             visualElement.style.display = "inline";
 
-            // Begin updating only the visual clock every minute (60000ms)
             setInterval(updateVisualTime, 60000);
         }
 
@@ -154,18 +163,14 @@
             const visualElement = document.getElementById('visual-time');
             const accessibleElement = document.getElementById('accessible-time');
             
-            // 1. Update the visual display cleanly
             visualElement.textContent = "Device time: " + timeString;
 
-            // 2. Hide the accessible element safely using CSS so it won't interrupt TalkBack
             if (!accessibleElement.classList.contains('sr-only')) {
                 accessibleElement.classList.add('sr-only');
-                // Alter text to match ongoing time structure smoothly without an announcement
                 accessibleElement.textContent = "Device time when page loaded: " + timeString;
             }
         }
 
-        // Run setup when the DOM content is completely loaded
         document.addEventListener('DOMContentLoaded', initializeTime);
     </script>
 
