@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Android Technology for Blind International</title>
     <style>
-        /* Basic accessible styling with high contrast */
+        /* Accessible styling with strong color contrast */
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -39,6 +39,18 @@
             background-color: #f0f0f0;
             display: inline-block;
         }
+        /* Utility class to make text readable ONLY by screen readers */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
         footer {
             border-top: 2px solid #333;
             margin-top: 40px;
@@ -57,14 +69,21 @@
 </head>
 <body>
 
+    <!-- Header Section (Consistent layout across pages) -->
     <header role="banner">
         <h1>Android Technology for Blind International</h1>
         <p>Welcome to the official website of ATBI.</p>
         
-        <div class="time-display" aria-live="polite" id="device-time">
-            Loading device time...
+        <!-- Time Section structured for Accessibility -->
+        <div class="time-display">
+            <!-- 1. Screen readers only see this static text snapshot taken at page load -->
+            <span id="accessible-time">Loading device time...</span>
+            
+            <!-- 2. Visual users see this dynamic clock updating every minute, hidden from TalkBack -->
+            <span id="visual-time" aria-hidden="true" style="display: none;"></span>
         </div>
 
+        <!-- Navigation Buttons -->
         <nav role="navigation" aria-label="Main Navigation">
             <a href="index.html" aria-current="page">Home</a>
             <a href="tools.html">Tools</a>
@@ -74,6 +93,7 @@
 
     <hr aria-hidden="true">
 
+    <!-- Main Content Section -->
     <main role="main">
         <h2>Welcome to ATBI (Assistive Technology for the Blind International)</h2>
         <p><strong>Empowering Sight, Enhancing Lives through Technology</strong></p>
@@ -98,23 +118,55 @@
 
     <hr aria-hidden="true">
 
+    <!-- Footer Section -->
     <footer role="contentinfo">
         <a href="https://t.me/TeamATBI_Channel" target="_blank" rel="noopener">Join our Telegram Channel</a>
         <a href="https://t.me/ATBI_TeamAdmin_Support_bot" target="_blank" rel="noopener">Contact and Support</a>
         <a href="https://telegra.ph/Official-Group-Regulations-by-ATBI-Admin-07-05" target="_blank" rel="noopener" aria-label="Read our group rules (opens in a new tab)">Read our group rules</a>
     </footer>
 
+    <!-- JavaScript Handling Dual Time Logic -->
     <script>
-        function updateTime() {
-            const timeElement = document.getElementById('device-time');
+        const formatOptions = { hour: '2-digit', minute: '2-digit' };
+
+        function initializeTime() {
             const now = new Date();
-            // Formats time clearly for speech synthesis (e.g., "12:30:15 PM")
-            timeElement.textContent = "Your device time: " + now.toLocaleTimeString();
+            const timeString = now.toLocaleTimeString([], formatOptions);
+
+            const accessibleElement = document.getElementById('accessible-time');
+            const visualElement = document.getElementById('visual-time');
+
+            // Set the static text for TalkBack users immediately
+            accessibleElement.textContent = "Page loaded at device time: " + timeString;
+
+            // Set the visual text and display it
+            visualElement.textContent = "Device time: " + timeString;
+            visualElement.style.display = "inline";
+
+            // Begin updating only the visual clock every minute (60000ms)
+            setInterval(updateVisualTime, 60000);
         }
-        // Run immediately on load
-        updateTime();
-        // Update every second
-        setInterval(updateTime, 1000);
+
+        function updateVisualTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], formatOptions);
+            
+            const visualElement = document.getElementById('visual-time');
+            const accessibleElement = document.getElementById('accessible-time');
+            
+            // 1. Update the visual display cleanly
+            visualElement.textContent = "Device time: " + timeString;
+
+            // 2. Hide the accessible element safely using CSS so it won't interrupt TalkBack
+            if (!accessibleElement.classList.contains('sr-only')) {
+                accessibleElement.classList.add('sr-only');
+                // Alter text to match ongoing time structure smoothly without an announcement
+                accessibleElement.textContent = "Device time when page loaded: " + timeString;
+            }
+        }
+
+        // Run setup when the DOM content is completely loaded
+        document.addEventListener('DOMContentLoaded', initializeTime);
     </script>
 
 </body>
