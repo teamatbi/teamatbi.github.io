@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts - Android Technology for Blind International</title>
+    <style>
+        /* Accessible styling with strong color contrast */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #ffffff;
+            color: #111111;
+            margin: 0;
+            padding: 20px;
+        }
+        header, nav, main, footer {
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        nav a {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-right: 10px;
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        nav a.active {
+            background-color: #111111;
+            outline: 2px solid #0056b3;
+        }
+        nav a:focus, nav a:hover {
+            background-color: #003d7a;
+            outline: 3px solid #ffcc00;
+        }
+        .time-display {
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 5px;
+            background-color: #f0f0f0;
+            display: inline-block;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        /* Styles for the automatic sorted posts list */
+        .post-list {
+            list-style: none;
+            padding: 0;
+        }
+        .post-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-bottom: 1px solid #cccccc;
+        }
+        .post-link {
+            font-size: 1.25rem;
+            color: #0056b3;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .post-link:focus, .post-link:hover {
+            text-decoration: underline;
+            outline: 3px solid #ffcc00;
+        }
+        .post-date {
+            display: block;
+            color: #555555;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+        footer {
+            border-top: 2px solid #333;
+            margin-top: 40px;
+            padding-top: 20px;
+        }
+        .footer-heading {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #333333;
+        }
+        footer a {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+            color: #0056b3;
+            font-weight: bold;
+        }
+        footer a:focus {
+            outline: 3px solid #ffcc00;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section (Matches index.html precisely) -->
+    <header role="banner">
+        <h1>Android Technology for Blind International</h1>
+        <p>Welcome to the official website of ATBI.</p>
+        
+        <div class="time-display">
+            <span id="accessible-time">Loading device time...</span>
+            <span id="visual-time" aria-hidden="true" style="display: none;"></span>
+        </div>
+
+        <nav role="navigation" aria-label="Main Navigation">
+            <a href="index.html">Home</a>
+            <a href="tools.html">Tools</a>
+            <a href="posts.html" class="active" aria-current="page">Posts</a>
+        </nav>
+    </header>
+
+    <hr aria-hidden="true">
+
+    <!-- Main Content Section -->
+    <main role="main">
+        <h2>Our Official Articles and Updates</h2>
+        <p>Browse our latest publications below. Click on any heading to read the full article.</p>
+
+        <!-- Dynamic Target Area for Auto-Generated Sorted Posts -->
+        <ul class="post-list" id="posts-container">
+            <li id="status-message">Scanning repository for available articles...</li>
+        </ul>
+    </main>
+
+    <hr aria-hidden="true">
+
+    <!-- Footer Section (Matches index.html precisely) -->
+    <footer role="contentinfo">
+        <h2 class="footer-heading">Community Links & Support</h2>
+        <a href="https://t.me/TeamATBI_Channel" target="_blank" rel="noopener">Join our Telegram Channel</a>
+        <a href="https://t.me/ATBI_TeamAdmin_Support_bot" target="_blank" rel="noopener">Contact and Support</a>
+        <a href="https://telegra.ph/Official-Group-Regulations-by-ATBI-Admin-07-05" target="_blank" rel="noopener" aria-label="Read our group rules (opens in a new tab)">Read our group rules</a>
+        <a href="https://surveyheart.com/form/6a4e244f670f7d5be2c5ab81" target="_blank" rel="noopener" aria-label="Join our team (opens in a new tab)">Join our team</a>
+    </footer>
+
+    <!-- JavaScript Handling Dual Time & Sorted List Logic -->
+    <script>
+        // 1. CONFIGURATION DATA
+        const GITHUB_USERNAME = "teamatbi"; 
+        const REPO_NAME = "teamatbi.github.io"; 
+        const formatOptions = { hour: '2-digit', minute: '2-digit' };
+
+        // 2. AUTOMATIC POST SCANNER AND DESCENDING DATE SORTING Engine
+        async function fetchRepositoryPosts() {
+            const container = document.getElementById('posts-container');
+            
+            if (window.location.protocol === "file:") {
+                container.innerHTML = `<li><strong>Local Mode Active:</strong> Push this code folder to GitHub to run the automatic chronological sorting.</li>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts`);
+                if (!response.ok) throw new Error('Could not read posts folder');
+                
+                const files = await response.json();
+                const postFiles = files.filter(f => f.name.endsWith('.html') && f.name !== 'index.html');
+
+                if (postFiles.length === 0) {
+                    container.innerHTML = "<li>No articles found in the posts folder yet!</li>";
+                    return;
+                }
+
+                // Fetch commit details for each post file to establish their true creation/update dates
+                const postsWithDates = await Promise.all(postFiles.map(async (file) => {
+                    try {
+                        const commitResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/commits?path=posts/${file.name}&page=1&per_page=1`);
+                        const commitData = await commitResponse.json();
+                        
+                        let rawDate = new Date(0); // Epoch fallback for safety
+                        if (commitData && commitData[0]) {
+                            rawDate = new Date(commitData[0].commit.committer.date);
+                        }
+                        return { ...file, commitDate: rawDate };
+                    } catch (e) {
+                        return { ...file, commitDate: new Date(0) };
+                    }
+                }));
+
+                // Sort the complete array from latest date to oldest date (descending)
+                postsWithDates.sort((a, b) => b.commitDate - a.commitDate);
+
+                container.innerHTML = ""; // Clear loader text
+
+                // Generate and append sorted HTML items to the layout
+                postsWithDates.forEach(file => {
+                    const listItem = document.createElement('li');
+                    listItem.className = "post-item";
+
+                    // Formats the file name visually (e.g., "my-first-post.html" becomes "My first post")
+                    const displayTitle = file.name.replace('.html', '').replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+                    
+                    let dateString = "Available";
+                    if (file.commitDate.getTime() !== 0) {
+                        dateString = file.commitDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    }
+
+                    listItem.innerHTML = `
+                        <a href="posts/${file.name}" class="post-link">${displayTitle}</a>
+                        <span class="post-date">Published on: ${dateString}</span>
+                    `;
+                    container.appendChild(listItem);
+                });
+
+            } catch (err) {
+                container.innerHTML = `<li style="color:red;">Error connecting to GitHub repository index. Make sure the repository is Public.</li>`;
+            }
+        }
+
+        // 3. SILENT DEVICE TIME TRACKING ENGINE
+        function initializeTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], formatOptions);
+            const accessibleElement = document.getElementById('accessible-time');
+            const visualElement = document.getElementById('visual-time');
+
+            accessibleElement.textContent = "Page loaded at device time: " + timeString;
+            visualElement.textContent = "Device time: " + timeString;
+            visualElement.style.display = "inline";
+
+            setInterval(updateVisualTime, 60000);
+        }
+
+        function updateVisualTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], formatOptions);
+            const visualElement = document.getElementById('visual-time');
+            const accessibleElement = document.getElementById('accessible-time');
+            
+            visualElement.textContent = "Device time: " + timeString;
+
+            if (!accessibleElement.classList.contains('sr-only')) {
+                accessibleElement.classList.add('sr-only');
+                accessibleElement.textContent = "Device time when page loaded: " + timeString;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTime();
+            fetchRepositoryPosts();
+        });
+    </script>
+</body>
+</html>
