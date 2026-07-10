@@ -149,12 +149,12 @@
         
         let cachedPostsArray = null;
 
-        // 1. ROUTER PIPELINE: Tracks whether to show the list view or open a specific post file
+        // 1. ROUTER PIPELINE
         async function routeViewer() {
             const workspace = document.getElementById('content-workspace');
-            const currentHash = window.location.hash.replace('#', '');
+            // encodeURIComponent handles matching special characters and spaces safely
+            const currentHash = decodeURIComponent(window.location.hash.replace('#', ''));
 
-            // View A: Main List (No file hash in URL)
             if (!currentHash || currentHash === "") {
                 document.getElementById('site-title').textContent = "Posts - Android Technology for Blind International";
                 workspace.innerHTML = `
@@ -168,7 +168,6 @@
                 return;
             }
 
-            // View B: Dynamic Post Loader (File hash detected)
             await loadStandaloneArticle(currentHash);
         }
 
@@ -214,14 +213,15 @@
                     const listItem = document.createElement('li');
                     listItem.className = "post-item";
 
-                    const displayTitle = file.name.replace('.html', '').replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+                    // Formats title nicely without changing the underlying file variable string
+                    const displayTitle = file.name.replace('.html', '').replace(/-/g, ' ').replace(/_/g, ' ');
                     
                     let dateString = "Available";
                     if (file.commitDate.getTime() !== 0) {
                         dateString = file.commitDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                     }
 
-                    // Creates a URL hash link (e.g., #extension-introduction.html)
+                    // Directly links to the file name matching GitHub's exact case layout
                     listItem.innerHTML = `
                         <a href="#${file.name}" class="post-link">${displayTitle}</a>
                         <span class="post-date">Published on: ${dateString}</span>
@@ -234,25 +234,36 @@
             }
         }
 
-        [span_1](start_span)// 3. BLIND TECH HUB STRATEGY: Fetches the file and strips the body content[span_1](end_span)
+        // 3. ARTICLE RENDERER (Extracts body content dynamically with layout protection)
         async function loadStandaloneArticle(fileName) {
             const workspace = document.getElementById('content-workspace');
-            const readableTitle = fileName.replace('.html', '').replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+            const readableTitle = fileName.replace('.html', '').replace(/-/g, ' ').replace(/_/g, ' ');
             
             document.getElementById('site-title').textContent = `${readableTitle} - ATBI`;
 
             try {
-                // Fetch the file directly from the posts folder
+                // Fetch the file using the exact case name preserved from the URL hash
                 const response = await fetch(`posts/${fileName}`);
                 if (!response.ok) throw new Error('Target post file missing');
                 const rawHtmlData = await response.text();
 
-                [span_2](start_span)// Parse the complete HTML document to extract its <body> content[span_2](end_span)
+                // Parse the loaded document
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(rawHtmlData, 'text/html');
-                const articleBodyContent = doc.body ? doc.body.innerHTML : rawHtmlData;
+                
+                // Fallback extraction system to make sure content loads regardless of the container setup
+                let articleBodyContent = "";
+                const articleContainer = doc.querySelector('.container') || doc.querySelector('.article-content-wrapper');
+                
+                if (articleContainer) {
+                    articleBodyContent = articleContainer.innerHTML;
+                } else if (doc.body) {
+                    articleBodyContent = doc.body.innerHTML;
+                } else {
+                    articleBodyContent = rawHtmlData;
+                }
 
-                [span_3](start_span)// Inject the article content into the ATBI workspace along with a back button[span_3](end_span)
+                // Inject content inside the layout workspace along with an easy back link
                 workspace.innerHTML = `
                     <a href="#" class="back-btn" aria-label="Return to articles list">← Back to Posts</a>
                     <div class="article-wrapper" id="article-focus-target">
@@ -260,7 +271,7 @@
                     </div>
                 `;
 
-                // Accessibility focus management for TalkBack
+                // Focus tracking optimization for screen readers
                 const focusTarget = document.getElementById('article-focus-target');
                 if (focusTarget) {
                     focusTarget.setAttribute('tabindex', '-1');
@@ -271,7 +282,7 @@
                 workspace.innerHTML = `
                     <a href="#" class="back-btn">← Back to Posts</a>
                     <h2 style="color:red;">Error Loading Post</h2>
-                    <p>Could not load the file: "posts/${fileName}". Please verify its spelling in your repository.</p>
+                    <p>Could not retrieve file: "posts/${fileName}". Please verify that this file exists inside your GitHub folder.</p>
                 `;
             }
         }
@@ -304,7 +315,6 @@
             }
         }
 
-        [span_4](start_span)// Listen for address hash changes to switch views fluidly[span_4](end_span)
         window.addEventListener('hashchange', routeViewer);
 
         document.addEventListener('DOMContentLoaded', () => {
