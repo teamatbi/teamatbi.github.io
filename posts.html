@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Posts - Android Technology for Blind International</title>
+    <title id="site-title">Posts - Android Technology for Blind International</title>
     <style>
         /* Accessible styling with strong color contrast */
         body {
@@ -32,7 +32,7 @@
             background-color: #111111;
             outline: 2px solid #0056b3;
         }
-        nav a:focus, nav a:hover {
+        nav a:focus, nav a:hover, .back-btn:focus {
             background-color: #003d7a;
             outline: 3px solid #ffcc00;
         }
@@ -54,7 +54,6 @@
             white-space: nowrap;
             border: 0;
         }
-        /* Styles for the automatic sorted posts list */
         .post-list {
             list-style: none;
             padding: 0;
@@ -64,7 +63,7 @@
             padding: 15px;
             border-bottom: 1px solid #cccccc;
         }
-        .post-link {
+        .post-link, .back-btn {
             font-size: 1.25rem;
             color: #0056b3;
             text-decoration: none;
@@ -80,6 +79,13 @@
             color: #555555;
             font-size: 0.95rem;
             margin-top: 5px;
+        }
+        .back-btn {
+            margin-bottom: 20px;
+            background-color: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #333;
         }
         footer {
             border-top: 2px solid #333;
@@ -105,7 +111,6 @@
 </head>
 <body>
 
-    <!-- Header Section (Matches index.html precisely) -->
     <header role="banner">
         <h1>Android Technology for Blind International</h1>
         <p>Welcome to the official website of ATBI.</p>
@@ -124,20 +129,11 @@
 
     <hr aria-hidden="true">
 
-    <!-- Main Content Section -->
-    <main role="main">
-        <h2>Our Official Articles and Updates</h2>
-        <p>Browse our latest publications below. Click on any heading to read the full article.</p>
-
-        <!-- Dynamic Target Area for Auto-Generated Sorted Posts -->
-        <ul class="post-list" id="posts-container">
-            <li id="status-message">Scanning repository for available articles...</li>
-        </ul>
-    </main>
+    <main role="main" id="content-workspace">
+        </main>
 
     <hr aria-hidden="true">
 
-    <!-- Footer Section (Matches index.html precisely) -->
     <footer role="contentinfo">
         <h2 class="footer-heading">Community Links & Support</h2>
         <a href="https://t.me/TeamATBI_Channel" target="_blank" rel="noopener">Join our Telegram Channel</a>
@@ -146,15 +142,38 @@
         <a href="https://surveyheart.com/form/6a4e244f670f7d5be2c5ab81" target="_blank" rel="noopener" aria-label="Join our team (opens in a new tab)">Join our team</a>
     </footer>
 
-    <!-- JavaScript Handling Dual Time & Sorted List Logic -->
     <script>
-        // 1. CONFIGURATION DATA
         const GITHUB_USERNAME = "teamatbi"; 
         const REPO_NAME = "teamatbi.github.io"; 
         const formatOptions = { hour: '2-digit', minute: '2-digit' };
+        
+        let cachedPostsArray = null;
+
+        // 1. ROUTER PIPELINE: Tracks whether to show the list view or open a specific post file
+        async function routeViewer() {
+            const workspace = document.getElementById('content-workspace');
+            const currentHash = window.location.hash.replace('#', '');
+
+            // View A: Main List (No file hash in URL)
+            if (!currentHash || currentHash === "") {
+                document.getElementById('site-title').textContent = "Posts - Android Technology for Blind International";
+                workspace.innerHTML = `
+                    <h2>Our Official Articles and Updates</h2>
+                    <p>Browse our latest publications below. Click on any heading to read the full article.</p>
+                    <ul class="post-list" id="posts-container">
+                        <li>Scanning repository for available articles...</li>
+                    </ul>
+                `;
+                await displaySortedList();
+                return;
+            }
+
+            // View B: Dynamic Post Loader (File hash detected)
+            await loadStandaloneArticle(currentHash);
+        }
 
         // 2. AUTOMATIC POST SCANNER AND DESCENDING DATE SORTING Engine
-        async function fetchRepositoryPosts() {
+        async function displaySortedList() {
             const container = document.getElementById('posts-container');
             
             if (window.location.protocol === "file:") {
@@ -163,44 +182,38 @@
             }
 
             try {
-                const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts`);
-                if (!response.ok) throw new Error('Could not read posts folder');
-                
-                const files = await response.json();
-                const postFiles = files.filter(f => f.name.endsWith('.html') && f.name !== 'index.html');
+                if (!cachedPostsArray) {
+                    const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/posts`);
+                    if (!response.ok) throw new Error('Could not read posts folder');
+                    
+                    const files = await response.json();
+                    const postFiles = files.filter(f => f.name.endsWith('.html') && f.name !== 'index.html');
 
-                if (postFiles.length === 0) {
-                    container.innerHTML = "<li>No articles found in the posts folder yet!</li>";
-                    return;
+                    cachedPostsArray = await Promise.all(postFiles.map(async (file) => {
+                        try {
+                            const commitResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/commits?path=posts/${file.name}&page=1&per_page=1`);
+                            const commitData = await commitResponse.json();
+                            
+                            let rawDate = new Date(0); 
+                            if (commitData && commitData[0]) {
+                                rawDate = new Date(commitData[0].commit.committer.date);
+                            }
+                            return { ...file, commitDate: rawDate };
+                        } catch (e) {
+                            return { ...file, commitDate: new Date(0) };
+                        }
+                    }));
+
+                    // Sort descending (latest to oldest)
+                    cachedPostsArray.sort((a, b) => b.commitDate - a.commitDate);
                 }
 
-                // Fetch commit details for each post file to establish their true creation/update dates
-                const postsWithDates = await Promise.all(postFiles.map(async (file) => {
-                    try {
-                        const commitResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/commits?path=posts/${file.name}&page=1&per_page=1`);
-                        const commitData = await commitResponse.json();
-                        
-                        let rawDate = new Date(0); // Epoch fallback for safety
-                        if (commitData && commitData[0]) {
-                            rawDate = new Date(commitData[0].commit.committer.date);
-                        }
-                        return { ...file, commitDate: rawDate };
-                    } catch (e) {
-                        return { ...file, commitDate: new Date(0) };
-                    }
-                }));
+                container.innerHTML = ""; 
 
-                // Sort the complete array from latest date to oldest date (descending)
-                postsWithDates.sort((a, b) => b.commitDate - a.commitDate);
-
-                container.innerHTML = ""; // Clear loader text
-
-                // Generate and append sorted HTML items to the layout
-                postsWithDates.forEach(file => {
+                cachedPostsArray.forEach(file => {
                     const listItem = document.createElement('li');
                     listItem.className = "post-item";
 
-                    // Formats the file name visually (e.g., "my-first-post.html" becomes "My first post")
                     const displayTitle = file.name.replace('.html', '').replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
                     
                     let dateString = "Available";
@@ -208,8 +221,9 @@
                         dateString = file.commitDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                     }
 
+                    // Creates a URL hash link (e.g., #extension-introduction.html)
                     listItem.innerHTML = `
-                        <a href="posts/${file.name}" class="post-link">${displayTitle}</a>
+                        <a href="#${file.name}" class="post-link">${displayTitle}</a>
                         <span class="post-date">Published on: ${dateString}</span>
                     `;
                     container.appendChild(listItem);
@@ -220,7 +234,49 @@
             }
         }
 
-        // 3. SILENT DEVICE TIME TRACKING ENGINE
+        [span_1](start_span)// 3. BLIND TECH HUB STRATEGY: Fetches the file and strips the body content[span_1](end_span)
+        async function loadStandaloneArticle(fileName) {
+            const workspace = document.getElementById('content-workspace');
+            const readableTitle = fileName.replace('.html', '').replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+            
+            document.getElementById('site-title').textContent = `${readableTitle} - ATBI`;
+
+            try {
+                // Fetch the file directly from the posts folder
+                const response = await fetch(`posts/${fileName}`);
+                if (!response.ok) throw new Error('Target post file missing');
+                const rawHtmlData = await response.text();
+
+                [span_2](start_span)// Parse the complete HTML document to extract its <body> content[span_2](end_span)
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(rawHtmlData, 'text/html');
+                const articleBodyContent = doc.body ? doc.body.innerHTML : rawHtmlData;
+
+                [span_3](start_span)// Inject the article content into the ATBI workspace along with a back button[span_3](end_span)
+                workspace.innerHTML = `
+                    <a href="#" class="back-btn" aria-label="Return to articles list">← Back to Posts</a>
+                    <div class="article-wrapper" id="article-focus-target">
+                        ${articleBodyContent}
+                    </div>
+                `;
+
+                // Accessibility focus management for TalkBack
+                const focusTarget = document.getElementById('article-focus-target');
+                if (focusTarget) {
+                    focusTarget.setAttribute('tabindex', '-1');
+                    focusTarget.focus();
+                }
+
+            } catch (err) {
+                workspace.innerHTML = `
+                    <a href="#" class="back-btn">← Back to Posts</a>
+                    <h2 style="color:red;">Error Loading Post</h2>
+                    <p>Could not load the file: "posts/${fileName}". Please verify its spelling in your repository.</p>
+                `;
+            }
+        }
+
+        // 4. SILENT DEVICE TIME TRACKING ENGINE
         function initializeTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString([], formatOptions);
@@ -248,9 +304,12 @@
             }
         }
 
+        [span_4](start_span)// Listen for address hash changes to switch views fluidly[span_4](end_span)
+        window.addEventListener('hashchange', routeViewer);
+
         document.addEventListener('DOMContentLoaded', () => {
             initializeTime();
-            fetchRepositoryPosts();
+            routeViewer();
         });
     </script>
 </body>
