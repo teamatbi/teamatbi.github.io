@@ -152,7 +152,6 @@
         // 1. ROUTER PIPELINE
         async function routeViewer() {
             const workspace = document.getElementById('content-workspace');
-            // encodeURIComponent handles matching special characters and spaces safely
             const currentHash = decodeURIComponent(window.location.hash.replace('#', ''));
 
             if (!currentHash || currentHash === "") {
@@ -171,7 +170,7 @@
             await loadStandaloneArticle(currentHash);
         }
 
-        // 2. AUTOMATIC POST SCANNER AND DESCENDING DATE SORTING Engine
+        // 2. AUTOMATIC POST SCANNER AND DESCENDING DATE SORTING ENGINE
         async function displaySortedList() {
             const container = document.getElementById('posts-container');
             
@@ -203,7 +202,6 @@
                         }
                     }));
 
-                    // Sort descending (latest to oldest)
                     cachedPostsArray.sort((a, b) => b.commitDate - a.commitDate);
                 }
 
@@ -213,7 +211,6 @@
                     const listItem = document.createElement('li');
                     listItem.className = "post-item";
 
-                    // Formats title nicely without changing the underlying file variable string
                     const displayTitle = file.name.replace('.html', '').replace(/-/g, ' ').replace(/_/g, ' ');
                     
                     let dateString = "Available";
@@ -221,7 +218,6 @@
                         dateString = file.commitDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                     }
 
-                    // Directly links to the file name matching GitHub's exact case layout
                     listItem.innerHTML = `
                         <a href="#${file.name}" class="post-link">${displayTitle}</a>
                         <span class="post-date">Published on: ${dateString}</span>
@@ -234,7 +230,7 @@
             }
         }
 
-        // 3. ARTICLE RENDERER (Extracts body content dynamically with layout protection)
+        // 3. ARTICLE RENDERER (With Fixed TalkBack Navigation Focus)
         async function loadStandaloneArticle(fileName) {
             const workspace = document.getElementById('content-workspace');
             const readableTitle = fileName.replace('.html', '').replace(/-/g, ' ').replace(/_/g, ' ');
@@ -242,16 +238,13 @@
             document.getElementById('site-title').textContent = `${readableTitle} - ATBI`;
 
             try {
-                // Fetch the file using the exact case name preserved from the URL hash
                 const response = await fetch(`posts/${fileName}`);
                 if (!response.ok) throw new Error('Target post file missing');
                 const rawHtmlData = await response.text();
 
-                // Parse the loaded document
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(rawHtmlData, 'text/html');
                 
-                // Fallback extraction system to make sure content loads regardless of the container setup
                 let articleBodyContent = "";
                 const articleContainer = doc.querySelector('.container') || doc.querySelector('.article-content-wrapper');
                 
@@ -263,26 +256,31 @@
                     articleBodyContent = rawHtmlData;
                 }
 
-                // Inject content inside the layout workspace along with an easy back link
+                // Notice we DO NOT use tabindex="-1" on the wrapper anymore!
                 workspace.innerHTML = `
-                    <a href="#" class="back-btn" aria-label="Return to articles list">← Back to Posts</a>
-                    <div class="article-wrapper" id="article-focus-target">
+                    <a href="#" class="back-btn" id="post-back-button" aria-label="Return to articles list">← Back to Posts</a>
+                    <div class="article-wrapper">
                         ${articleBodyContent}
                     </div>
                 `;
 
-                // Focus tracking optimization for screen readers
-                const focusTarget = document.getElementById('article-focus-target');
-                if (focusTarget) {
-                    focusTarget.setAttribute('tabindex', '-1');
-                    focusTarget.focus();
+                // Smart Accessibility Focus targeting for TalkBack:
+                // We look for the first heading (h1, h2) or paragraph inside the new article text
+                const firstTextElement = workspace.querySelector('h1, h2, h3, p');
+                if (firstTextElement) {
+                    firstTextElement.setAttribute('tabindex', '-1');
+                    firstTextElement.style.outline = "none"; // Keeps it clean visually
+                    firstTextElement.focus(); // Places TalkBack directly onto the text starting point!
+                } else {
+                    // Fallback to back button if no text elements are found
+                    document.getElementById('post-back-button').focus();
                 }
 
             } catch (err) {
                 workspace.innerHTML = `
                     <a href="#" class="back-btn">← Back to Posts</a>
                     <h2 style="color:red;">Error Loading Post</h2>
-                    <p>Could not retrieve file: "posts/${fileName}". Please verify that this file exists inside your GitHub folder.</p>
+                    <p>Could not retrieve file: "posts/${fileName}".</p>
                 `;
             }
         }
