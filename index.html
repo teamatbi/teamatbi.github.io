@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Android Technology for Blind International</title>
     <style>
-        /* Accessible styling with strong color contrast */
+        /* Accessible core styles with high color contrast (Dark text on light background) */
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -18,43 +18,55 @@
             margin-bottom: 20px;
             padding: 10px;
         }
+        /* Dark header wrapper styling to match the logo image background color perfectly */
         header {
+            background-color: #1a252f;
+            color: #ffffff;
             text-align: center;
+            border-radius: 6px;
+            padding: 25px 15px;
         }
-        /* Style to handle the logo sizing cleanly on mobile and desktop */
+        /* Clean image layout rules to resize and center the circular logo */
         .site-logo {
             display: block;
             margin: 15px auto;
             max-width: 220px;
             width: 100%;
             height: auto;
-            border-radius: 50%; /* Matches your circular logo emblem perfectly */
+            border-radius: 50%; /* Smooth alignment matching the circle emblem style */
         }
+        /* Clearly defined, high-contrast block navigation links */
         nav a {
             display: inline-block;
             padding: 10px 15px;
-            margin-right: 10px;
+            margin: 5px 10px 5px 0;
             background-color: #0056b3;
             color: white;
             text-decoration: none;
             border-radius: 4px;
             font-weight: bold;
         }
+        /* Styling active tab visually */
         nav a.active {
             background-color: #111111;
             outline: 2px solid #0056b3;
         }
-        nav a:focus, nav a:hover {
+        /* Highly visible keyboard focus indicator for keyboard/switch navigation */
+        nav a:focus, nav a:hover, footer a:focus {
             background-color: #003d7a;
             outline: 3px solid #ffcc00;
+            outline-offset: 2px;
         }
         .time-display {
             font-weight: bold;
             margin: 10px 0;
             padding: 5px;
             background-color: #f0f0f0;
+            color: #111111;
             display: inline-block;
+            border-radius: 4px;
         }
+        /* Utility class to cleanly mask elements from sighted users while remaining readable by TalkBack */
         .sr-only {
             position: absolute;
             width: 1px;
@@ -65,11 +77,6 @@
             clip: rect(0, 0, 0, 0);
             white-space: nowrap;
             border: 0;
-        }
-        main h2 {
-            color: #111111;
-            border-bottom: 2px solid #0056b3;
-            padding-bottom: 5px;
         }
         footer {
             border-top: 2px solid #333;
@@ -88,9 +95,6 @@
             color: #0056b3;
             font-weight: bold;
         }
-        footer a:focus {
-            outline: 3px solid #ffcc00;
-        }
     </style>
 </head>
 <body>
@@ -104,6 +108,7 @@
         
         <div class="time-display">
             <span id="accessible-time">Loading device time...</span>
+            
             <span id="visual-time" aria-hidden="true" style="display: none;"></span>
         </div>
 
@@ -117,22 +122,32 @@
     <hr aria-hidden="true">
 
     <main role="main">
-        <h2>About Our Community</h2>
-        <p>Android Technology for Blind International (ATBI) is a global platform dedicated to making technology completely accessible and usable for blind and visually impaired individuals around the world.</p>
-        <p>Through practical tutorials, custom accessible tools, and community-driven publications, we strive to break down accessibility barriers and help screen reader users achieve complete digital independence.</p>
+        <h2>Welcome to ATBI (Assistive Technology for the Blind International)</h2>
+        <p><strong>Empowering Sight, Enhancing Lives through Technology</strong></p>
         
-        <h3>Explore Our Website</h3>
-        <p>Use the links in the navigation bar above or explore below:</p>
+        <p>Welcome to ATBI, a global charitable community dedicated to creating a brighter, more accessible world for visually impaired individuals worldwide. We believe that blindness should never be a barrier to knowledge, independence, and happiness. Through the power of technology and strong teamwork, we stand together as one big family to support each other.</p>
+
+        <h3>Our Mission</h3>
+        <p>Our mission is entirely charitable. We focus on providing free, digital, and practical assistive tools that help blind individuals navigate daily tasks, education, and technology with ease. We aim to bring useful resources directly to our members' fingertips without any financial burden.</p>
+
+        <h3>Our Vision</h3>
+        <p>To build a global supportive community where every visually impaired person, regardless of their location, has equal access to technology, opportunities, and a caring support system that understands their needs.</p>
+
+        <h3>Why Choose Our Community?</h3>
         <ul>
-            <li><strong>Tools Tab:</strong> Access our web-based interactive utility tools customized explicitly for screen reader environments.</li>
-            <li><strong>Posts Tab:</strong> Read our latest articles, updates, updates on helpful applications, and step-by-step guides.</li>
+            <li><strong>True Family & Support:</strong> A safe, welcoming space with zero pressure, where members understand and care for each other.</li>
+            <li><strong>Accessible Tools:</strong> Simple, functional, and offline-friendly HTML tools created to enhance daily independence.</li>
+            <li><strong>Global Network:</strong> Connecting visually impaired individuals and passionate tech developers across different countries and time zones.</li>
         </ul>
+
+        <p><em>Together, we are not just building a platform; we are building a family. Let's move forward together!</em></p>
     </main>
 
     <hr aria-hidden="true">
 
     <footer role="contentinfo">
         <h2 class="footer-heading">Community Links & Support</h2>
+        
         <a href="https://t.me/TeamATBI_Channel" target="_blank" rel="noopener">Join our Telegram Channel</a>
         <a href="https://t.me/ATBI_TeamAdmin_Support_bot" target="_blank" rel="noopener">Contact and Support</a>
         <a href="https://telegra.ph/Official-Group-Regulations-by-ATBI-Admin-07-05" target="_blank" rel="noopener" aria-label="Read our group rules (opens in a new tab)">Read our group rules</a>
@@ -145,24 +160,32 @@
         function initializeTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString([], formatOptions);
+
             const accessibleElement = document.getElementById('accessible-time');
             const visualElement = document.getElementById('visual-time');
 
+            // Save standard snapshot text for screen readers immediately on page open
             accessibleElement.textContent = "Page loaded at device time: " + timeString;
+
+            // Display time to visual layout
             visualElement.textContent = "Device time: " + timeString;
             visualElement.style.display = "inline";
 
+            // Run visual updates quietly every minute (60000 milliseconds)
             setInterval(updateVisualTime, 60000);
         }
 
         function updateVisualTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString([], formatOptions);
+            
             const visualElement = document.getElementById('visual-time');
             const accessibleElement = document.getElementById('accessible-time');
             
+            // Update visual time interface text string
             visualElement.textContent = "Device time: " + timeString;
 
+            // Push the accessible container into background hiding after initial print
             if (!accessibleElement.classList.contains('sr-only')) {
                 accessibleElement.classList.add('sr-only');
                 accessibleElement.textContent = "Device time when page loaded: " + timeString;
@@ -171,5 +194,6 @@
 
         document.addEventListener('DOMContentLoaded', initializeTime);
     </script>
+
 </body>
 </html>
